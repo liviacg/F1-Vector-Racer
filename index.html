@@ -47,9 +47,9 @@ button { cursor: pointer; }
 .btn.danger { background: #b51f1a; border-color: #da3931; }
 
 /* Main menu */
-.menu-screen { overflow: hidden; position: relative; }
+.menu-screen { min-height:100dvh; overflow-x:hidden; overflow-y:auto; position:relative; }
 .menu-garage {
-  position: absolute; inset: 0; min-height: 100vh; overflow: hidden;
+  position: fixed; inset: 0; height: 100dvh; min-height: 0; overflow: hidden; pointer-events:none;
   background:
     linear-gradient(180deg, #161c27 0 15%, #aeb5bf 15% 19%, #d8dde3 19% 77%, #232933 77% 100%);
 }
@@ -57,9 +57,7 @@ button { cursor: pointer; }
   content: "FORMULA GARAGE"; position: absolute; left: 37%; top: 4%; width: 56%; text-align: center;
   color: #f7f7f5; font-size: clamp(32px, 5vw, 72px); font-weight: 1000; letter-spacing: .02em;
 }
-.menu-garage::after {
-  display: none;
-}
+.menu-garage::after { display:none; }
 .garage-monitor-row { position: absolute; left: 41%; top: 33%; width: 34%; display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
 .garage-monitor { aspect-ratio: 1.45; background: #07121f; border: 4px solid #56606c; border-radius: 6px; position: relative; }
 .garage-monitor::before { content: ""; position: absolute; inset: 18% 12%; border-top: 2px solid #173148; border-bottom: 2px solid #173148; }
@@ -69,22 +67,26 @@ button { cursor: pointer; }
 .garage-platform { position: absolute; left: 27%; right: 12%; top: 69%; height: 14%; background: #202630; border: 4px solid #a9b0bb; border-radius: 6px; box-shadow: inset 0 4px 0 #fff; }
 .menu-car-canvas { position: absolute; left: 31%; top: 46%; width: 67%; height: auto; aspect-ratio: 1235 / 260; pointer-events: none; }
 .menu-panel {
-  position: relative; z-index: 4; margin-left: 2.4%; width: min(480px, 36vw); min-width: 340px;
-  min-height: 100vh; padding: 42px 34px 34px; background: #151824; border: 2px solid #64708e;
-  box-shadow: 10px 0 32px rgba(0,0,0,.25);
+  position:relative; z-index:4; margin-left:2.4%; width:clamp(320px,36vw,480px); min-width:0;
+  min-height:100dvh; padding:42px 34px 34px; background:#151824; border:2px solid #64708e;
+  box-shadow:10px 0 32px rgba(0,0,0,.25); display:flex; flex-direction:column;
 }
 .menu-logo-big { font-size: 64px; color: #ff473f; margin: 0; line-height: .9; }
 .menu-logo-sub { font-size: 28px; margin: 24px 0 10px; }
 .menu-tag { color: var(--cyan); font-size: 13px; margin-bottom: 28px; }
 .menu-label { color: #9da9c7; font-size: 12px; margin: 18px 0 8px; }
 .track-mini-card { border: 3px solid #76e8ff; border-radius: 18px; background: #20252d; padding: 12px 14px; }
-.track-mini-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.track-mini-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .track-mini-title { font-size: 20px; font-weight: 900; }
 .track-mini-meta { font-size: 12px; color: #bcc6d8; }
 .track-mini-canvas { width: 100%; aspect-ratio: 3.2; background: #dedfdd; border-radius: 12px; margin-top: 10px; }
 .palette-preview { display: flex; gap: 5px; margin: 8px 0 12px; }
 .palette-preview span { width: 28px; height: 22px; border: 1px solid #e4e7ec; }
-.menu-actions { display: grid; gap: 10px; }
+.menu-actions { display:grid; gap:10px; }
+.menu-actions .btn { width:100%; min-width:0; white-space:normal; overflow-wrap:anywhere; }
+.topbar { flex-wrap:wrap; }
+.topbar > * { min-width:0; }
+.topbar .subtle { overflow-wrap:anywhere; }
 
 /* Track selector */
 .selector-wrap { max-width: 1180px; margin: 0 auto; padding: 24px 24px 80px; }
@@ -157,6 +159,13 @@ button { cursor: pointer; }
 .legend { font-size:12px; display:grid; gap:5px; }
 .legend .v { color:#ff3b30; }.legend .a { color:#00c8ff; }.legend .cp { color:#72f1a5; }
 
+/* Non-blocking race notice: keeps the circuit visible after a crash. */
+.race-notice { display:none; margin:0 0 10px; padding:10px 11px; border:1px solid #596171; background:#10151d; }
+.race-notice.visible { display:block; }
+.race-notice.crash { border-color:#e35d55; background:#241414; }
+.race-notice-title { font:900 12px "Courier New", monospace; color:#ff8f88; margin-bottom:4px; }
+.race-notice-copy { color:#d7dde7; font-size:12px; line-height:1.4; }
+
 /* Modals/toasts */
 .overlay { position:fixed; inset:0; z-index:30; background:rgba(5,7,10,.82); display:grid; place-items:center; padding:20px; }
 .overlay-card { width:min(520px,95vw); background:#171b24; border:2px solid #5b6472; padding:24px; text-align:center; }
@@ -170,22 +179,61 @@ button { cursor: pointer; }
 .help-card code { color:#8feaff; }
 
 @media (max-width: 1000px) {
-  .menu-panel { width: 440px; min-width: 0; margin-left: 0; }
-  .menu-garage { opacity:.5; }
+  .menu-panel { width:min(460px,54vw); margin-left:0; padding:32px 26px 28px; }
+  .menu-garage { opacity:.55; }
   .track-grid { grid-template-columns:1fr; }
   .race-layout { grid-template-columns:1fr; }
   .race-panel { max-height:none; }
   .gauge-row { grid-template-columns:repeat(2,minmax(0,160px)); }
 }
-@media (max-width: 620px) {
-  .menu-panel { width:100%; padding:28px 20px; }
-  .menu-garage::before, .menu-garage::after, .menu-car-canvas, .garage-monitor-row, .tire-rack, .garage-platform { display:none; }
-  .editor-actions { grid-template-columns:1fr; }
-  .track-card { grid-template-columns:1fr; }
+
+@media (max-width: 760px) {
+  .menu-screen { background:#151824; }
+  .menu-garage { display:none; }
+  .menu-panel { width:100%; max-width:none; min-height:100dvh; margin:0; padding:26px 20px 30px; border:0; box-shadow:none; }
+  .menu-logo-big { font-size:clamp(46px,15vw,64px); }
+  .menu-logo-sub { font-size:clamp(22px,7vw,28px); margin-top:18px; }
+  .menu-tag { font-size:11px; margin-bottom:20px; }
+  .menu-label { margin-top:15px; }
+  .track-mini-card { border-radius:12px; }
+  .topbar { padding:10px 12px; gap:10px; }
+  .topbar .title { flex:1 1 180px; }
+  .topbar .subtle, .topbar .accent { flex:1 1 100%; }
+  .selector-wrap, .editor-shell { padding:18px 14px 50px; }
+  .editor-actions { grid-template-columns:1fr; gap:10px; }
+  .track-card { grid-template-columns:1fr; min-height:0; }
   .flag-box,.original-badge { justify-self:start; }
-  .livery-tabs { position:relative; top:auto; left:auto; right:auto; padding:12px; flex-wrap:wrap; }
-  .livery-car { left:4%; top:39%; width:92%; }
-  .livery-palette { width:46%; right:4%; }
+  .race-layout { padding:8px; gap:8px; }
+  .race-panel { padding:12px; }
+  .panel-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .livery-screen { display:block; padding:0; }
+  .livery-stage { width:100%; min-height:100dvh; aspect-ratio:auto; }
+  .livery-tabs { position:relative; top:auto; left:auto; right:auto; padding:12px; gap:8px; flex-wrap:wrap; z-index:6; }
+  .livery-tab { min-width:0; flex:1 1 150px; }
+  .confirm-float { margin-left:0; }
+  .livery-car { left:4%; top:31%; width:92%; }
+  .livery-palette { width:min(92%,360px); right:4%; bottom:12%; grid-template-columns:repeat(4,1fr); }
+  .livery-back { left:4%; bottom:4%; }
+}
+
+@media (max-width: 440px) {
+  .btn { min-height:42px; padding:9px 11px; }
+  .menu-panel { padding:20px 14px 24px; }
+  .track-mini-title { font-size:18px; overflow-wrap:anywhere; }
+  .track-mini-canvas { aspect-ratio:2.8; }
+  .panel-actions { grid-template-columns:1fr; }
+  .gauge-row { grid-template-columns:1fr 1fr; }
+  .toast { left:12px; right:12px; bottom:12px; text-align:center; }
+}
+
+@media (max-height: 700px) and (min-width: 761px) {
+  .menu-panel { padding-top:22px; padding-bottom:22px; }
+  .menu-logo-big { font-size:50px; }
+  .menu-logo-sub { margin-top:14px; }
+  .menu-tag { margin-bottom:16px; }
+  .menu-label { margin-top:12px; }
+  .menu-actions { gap:7px; }
+  .menu-actions .btn { min-height:40px; padding:8px 12px; }
 }
 
 </style>
@@ -204,28 +252,38 @@ button { cursor: pointer; }
   const COAST_EXTENSION_S = 6.0;
   const CONTINUE_MIN_SPEED = 8.0;
   const ALMOST_STOPPED_SPEED = 1.2;
+  const MAX_ACCELERATION_INPUT = 100;
+  const ACCELERATION_SCALE = 60; // keeps the old physics feel while user input is capped at 0..100
 
-  const DEFAULT_INPUT = `# time, duration, acceleration, angle
-0.04, 0.24, 250, 0
-0.29, 0.24, 850, 5
-0.54, 0.24, 1450, 15
-0.79, 0.24, 2100, -30
-1.04, 0.24, 5550, -145
-1.29, 0.24, 5150, 160
-1.54, 0.24, 2350, 95
-1.79, 0.24, 4100, 40
-2.04, 0.24, 4300, -5
-2.29, 0.24, 2350, -95
-2.54, 0.24, 1400, -160
-2.79, 0.35, 600, 160
+  const DEFAULT_INPUT = `# time, duration, acceleration (0-100), angle
+0.04, 0.24, 4.167, 0
+0.29, 0.24, 14.167, 5
+0.54, 0.24, 24.167, 15
+0.79, 0.24, 35, -30
+1.04, 0.24, 92.5, -145
+1.29, 0.24, 85.833, 160
+1.54, 0.24, 39.167, 95
+1.79, 0.24, 68.333, 40
+2.04, 0.24, 71.667, -5
+2.29, 0.24, 39.167, -95
+2.54, 0.24, 23.333, -160
+2.79, 0.35, 10, 160
 `;
 
   const DEFAULT_PALETTE = {
     primary: '#e10600',
+    // These are intentionally fixed. Only the main/body color is user-customizable.
     secondary: '#ffd21f',
     accent: '#ffffff',
     wheel: '#0a0b0d',
   };
+
+  function normalizePalette(value){
+    const primary = value && typeof value.primary === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.primary)
+      ? value.primary
+      : DEFAULT_PALETTE.primary;
+    return { ...DEFAULT_PALETTE, primary };
+  }
 
   const SWATCHES = [
     '#ef0b0b','#1725e8','#f2c425','#f3dc16',
@@ -283,6 +341,7 @@ button { cursor: pointer; }
 
   const ORIGINAL = ['Sunset Speedway','Pine Ridge','Kingsfield GP','Harbor Street','Dune Crest'];
   const SPECIAL = ['Monza','Melbourne','Silverstone','Spa'];
+  const COMMUNITY = [];
 
   const THEME = {
     sunset:{ground:'#5f8425', specks:['#56781f','#698f2b','#769b32','#4e701b'], verge:'#4e6c22'},
@@ -291,6 +350,22 @@ button { cursor: pointer; }
     harbor:{ground:'#173f49', specks:['#143841','#1d4b55','#225761','#102f37'], verge:'#12434d'},
     desert:{ground:'#b98a4a', specks:['#aa7b40','#c59653','#cca360','#9f7139'], verge:'#6e5830'},
   };
+
+  function migrateLegacyAccelerationInput(text){
+    let changed=false;
+    const converted=String(text||'').split(/\r?\n/).map(raw=>{
+      const trimmed=raw.trim();
+      if(!trimmed || trimmed.startsWith('#'))return raw;
+      const parts=raw.split(',');
+      if(parts.length!==4)return raw;
+      const accel=Number(parts[2].trim());
+      if(!Number.isFinite(accel) || accel<=MAX_ACCELERATION_INPUT)return raw;
+      parts[2]=' '+(accel/ACCELERATION_SCALE).toFixed(3).replace(/\.?0+$/,'');
+      changed=true;
+      return parts.join(',');
+    }).join('\n');
+    return {text:converted,changed};
+  }
 
   const storage = {
     get(key, fallback) {
@@ -304,27 +379,48 @@ button { cursor: pointer; }
     track: storage.get('fvr.track', 'Sunset Speedway'),
     input: storage.get('fvr.input', DEFAULT_INPUT),
     palette: (() => {
-      try { return {...DEFAULT_PALETTE, ...JSON.parse(storage.get('fvr.palette', '{}'))}; }
-      catch { return {...DEFAULT_PALETTE}; }
+      try { return normalizePalette(JSON.parse(storage.get('fvr.palette', '{}'))); }
+      catch { return normalizePalette(); }
     })(),
     activeColor: 'primary',
     levelCache: new Map(),
     carBase: null,
     screenCleanup: null,
+    account: { uid:'', username:'Guest', isAnonymous:true, isEditor:false },
   };
   if (!TRACKS[state.track]) state.track = 'Sunset Speedway';
+  state.palette=normalizePalette(state.palette);
+  storage.set('fvr.palette',JSON.stringify(state.palette));
+  {
+    const migrated=migrateLegacyAccelerationInput(state.input);
+    if(migrated.changed){state.input=migrated.text;storage.set('fvr.input',state.input);}
+  }
 
+  // Community-circuit + Firebase bridge. The Firebase module is loaded at the
+  // bottom of this single HTML file, while the racing game lives in this scope.
+  let pendingCloudTrack = null;
 
-  // -------- Firebase cloud-save bridge --------
-  // The Firebase module is loaded at the bottom of this HTML file. These helpers
-  // keep the game usable even if Firebase is still connecting or temporarily offline.
+  function escapeHtml(value){
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function trackDisplayName(key){
+    const spec = TRACKS[key];
+    return spec && spec.name ? spec.name : key;
+  }
+
   window.getFvrSaveData = () => ({
     accelerationInput: state.input,
     selectedTrack: state.track,
     palette: { ...state.palette }
   });
 
-  async function cloudSaveCurrentState() {
+  async function cloudSaveCurrentState(){
     try {
       if (!window.firebaseGame || !window.firebaseGame.saveToCloud) return false;
       await window.firebaseGame.saveToCloud(window.getFvrSaveData());
@@ -335,28 +431,113 @@ button { cursor: pointer; }
     }
   }
 
+  window.installCommunityCircuits = function(circuits){
+    for (const key of COMMUNITY) {
+      delete TRACKS[key];
+      state.levelCache.delete(key);
+    }
+    COMMUNITY.length = 0;
+
+    for (const circuit of circuits || []) {
+      if (!circuit || !circuit.id || !circuit.name || !Array.isArray(circuit.points) || circuit.points.length < 6) continue;
+
+      const key = 'community:' + circuit.id;
+      TRACKS[key] = {
+        name: circuit.name,
+        roadWidth: circuit.roadWidth,
+        seed: circuit.seed || 1,
+        theme: circuit.theme,
+        checkpoints: circuit.checkpoints,
+        points: circuit.points,
+        group: 'community',
+        country: 'Community Circuit',
+        creatorId: circuit.creatorId || '',
+        creatorUsername: circuit.creatorUsername || '',
+        firebaseId: circuit.id
+      };
+      COMMUNITY.push(key);
+    }
+
+    if (pendingCloudTrack && TRACKS[pendingCloudTrack]) {
+      state.track = pendingCloudTrack;
+      storage.set('fvr.track', state.track);
+      pendingCloudTrack = null;
+    }
+
+    if (!TRACKS[state.track]) {
+      state.track = 'Sunset Speedway';
+      storage.set('fvr.track', state.track);
+    }
+
+    if (document.getElementById('trackSections')) showTrackSelector();
+    else if (document.querySelector('.menu-screen')) showMenu();
+  };
+
   window.addEventListener('fvr-cloud-loaded', (event) => {
     const save = event.detail || {};
 
     if (typeof save.accelerationInput === 'string' && save.accelerationInput.trim()) {
-      state.input = save.accelerationInput;
+      const migrated=migrateLegacyAccelerationInput(save.accelerationInput);
+      state.input = migrated.text;
       storage.set('fvr.input', state.input);
+      if(migrated.changed)void cloudSaveCurrentState();
     }
 
-    if (typeof save.selectedTrack === 'string' && TRACKS[save.selectedTrack]) {
-      state.track = save.selectedTrack;
-      storage.set('fvr.track', state.track);
+    if (typeof save.selectedTrack === 'string') {
+      if (TRACKS[save.selectedTrack]) {
+        state.track = save.selectedTrack;
+        storage.set('fvr.track', state.track);
+      } else if (save.selectedTrack.startsWith('community:')) {
+        pendingCloudTrack = save.selectedTrack;
+      }
     }
 
     if (save.palette && typeof save.palette === 'object') {
-      state.palette = { ...DEFAULT_PALETTE, ...save.palette };
+      state.palette = normalizePalette(save.palette);
       storage.set('fvr.palette', JSON.stringify(state.palette));
     }
 
-    // Refresh the main menu if it is currently visible so the cloud-loaded track
-    // and livery are immediately reflected on screen.
     if (document.querySelector('.menu-screen')) showMenu();
   });
+
+
+  window.addEventListener('fvr-auth-changed', (event) => {
+    const detail=event.detail || {};
+    state.account={
+      uid: typeof detail.uid==='string' ? detail.uid : '',
+      username: typeof detail.username==='string' && detail.username ? detail.username : 'Guest',
+      isAnonymous: detail.isAnonymous !== false,
+      isEditor: detail.isEditor === true
+    };
+    if(document.querySelector('.menu-screen'))showMenu();
+    else if(document.getElementById('trackSections'))showTrackSelector();
+  });
+
+  function isRegisteredPlayer(){
+    return !!state.account.uid && !state.account.isAnonymous;
+  }
+
+  function canEditCommunityTrack(key){
+    const spec=TRACKS[key];
+    if(!spec || spec.group!=='community' || !isRegisteredPlayer())return false;
+    return state.account.isEditor === true;
+  }
+
+  async function submitRaceScore(finishTime){
+    try{
+      if(!window.firebaseGame || !window.firebaseGame.submitScore)return;
+      const result=await window.firebaseGame.submitScore({
+        finishTime,
+        trackKey:state.track,
+        trackName:trackDisplayName(state.track)
+      });
+      if(result && result.submitted)toast(`Leaderboard score: ${result.score.toLocaleString()}`);
+      else if(result && result.reason==='guest')toast('Login to submit leaderboard scores');
+    }catch(error){
+      console.error('Leaderboard submit failed:',error);
+      toast('Race finished — leaderboard sync failed');
+    }
+  }
 
   function loadImageAsset(src){
     const img = new Image();
@@ -549,6 +730,7 @@ button { cursor: pointer; }
       const nums=parts.map(Number); if(nums.some(v=>!Number.isFinite(v)))throw new Error(`Line ${idx+1}: all 4 values must be numbers`);
       if(nums[0]<0)throw new Error(`Line ${idx+1}: time cannot be negative`);
       if(nums[1]<=0)throw new Error(`Line ${idx+1}: duration must be greater than 0`);
+      if(nums[2]<0 || nums[2]>MAX_ACCELERATION_INPUT)throw new Error(`Line ${idx+1}: acceleration must be between 0 and ${MAX_ACCELERATION_INPUT}`);
       out.push({time:nums[0],duration:nums[1],accel:nums[2],angle:nums[3]});
     });
     if(!out.length)throw new Error('The acceleration input is empty.');
@@ -613,7 +795,9 @@ button { cursor: pointer; }
   }
 
   function flagMarkup(name){
-    const f=TRACKS[name].flag;
+    const spec=TRACKS[name];
+    const f=spec.flag;
+    if(spec.group==='community')return `<div class="original-badge"><span>COMMUNITY<br>CIRCUIT</span></div>`;
     if(!f)return `<div class="original-badge"><span>ORIGINAL<br>CIRCUIT</span></div>`;
     if(f==='australia')return `<div class="flag-box"><img src="data:image/png;base64,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" alt="Australian flag"></div>`;
     return `<div class="flag-box flag-${f}" role="img" aria-label="${TRACKS[name].country} flag"></div>`;
@@ -621,17 +805,30 @@ button { cursor: pointer; }
 
   function showMenu(){
     cleanScreen();
-    const spec=TRACKS[state.track];
+    const spec=TRACKS[state.track] || TRACKS['Sunset Speedway'];
+    if(!TRACKS[state.track]) state.track='Sunset Speedway';
+    const displayName=escapeHtml(trackDisplayName(state.track));
+    const typeBadge=spec.group==='special'
+      ? `<div class="accent pixel">SPECIAL</div>`
+      : spec.group==='community'
+        ? `<div class="accent pixel">COMMUNITY</div>`
+        : '';
     APP.innerHTML=`<section class="screen menu-screen">
       <div class="menu-garage" aria-hidden="true"><div class="garage-monitor-row"><div class="garage-monitor"></div><div class="garage-monitor"></div><div class="garage-monitor"></div></div><div class="tire-rack">${'<span></span>'.repeat(6)}</div><div class="garage-platform"></div><canvas id="menuCar" class="menu-car-canvas"></canvas></div>
       <aside class="menu-panel">
         <h1 class="menu-logo-big pixel">F1</h1><div class="menu-logo-sub pixel">VECTOR RACER</div><div class="menu-tag pixel">PICK A TRACK  •  TUNE THE CAR  •  GO RACING</div>
         <div class="menu-label pixel">CURRENT TRACK</div>
-        <div class="track-mini-card"><div class="track-mini-head"><div><div class="track-mini-title">${state.track}</div><div class="track-mini-meta">${spec.country}</div></div>${spec.group==='special'?`<div class="accent pixel">SPECIAL</div>`:''}</div><canvas id="miniTrack" width="360" height="110" class="track-mini-canvas"></canvas></div>
+        <div class="track-mini-card"><div class="track-mini-head"><div><div class="track-mini-title">${displayName}</div><div class="track-mini-meta">${escapeHtml(spec.country)}</div></div>${typeBadge}</div><canvas id="miniTrack" width="360" height="110" class="track-mini-canvas"></canvas></div>
         <div class="menu-actions" style="margin-top:10px"><button id="changeTrack" class="btn">CHANGE TRACK</button></div>
-        <div class="menu-label pixel">CAR COLORS</div><div class="palette-preview">${['primary','secondary','accent','wheel'].map(k=>`<span style="background:${state.palette[k]}"></span>`).join('')}</div>
+        <div class="menu-label pixel">CAR COLOR</div><div class="palette-preview"><span style="background:${state.palette.primary}" title="Main car color"></span></div>
+        <div class="menu-label pixel">PLAYER</div>
         <div class="menu-actions">
-          <button id="colors" class="btn">CUSTOMIZE COLORS</button>
+          <button id="account" class="btn cyan">${state.account.isAnonymous?'LOGIN / REGISTER':'ACCOUNT: '+escapeHtml(state.account.username)+(state.account.isEditor?' • EDITOR':'')}</button>
+          <button id="leaderboard" class="btn">LEADERBOARD</button>
+        </div>
+        <div class="menu-label pixel">RACE</div>
+        <div class="menu-actions">
+          <button id="colors" class="btn">CUSTOMIZE CAR COLOR</button>
           <button id="race" class="btn primary">START RACE</button>
           <button id="edit" class="btn">EDIT ACCELERATION</button>
           <button id="help" class="btn">HOW IT WORKS</button>
@@ -641,6 +838,8 @@ button { cursor: pointer; }
     drawTrackLogo(document.getElementById('miniTrack'),state.track);
     renderSideCar(document.getElementById('menuCar'),state.palette);
     document.getElementById('changeTrack').onclick=showTrackSelector;
+    document.getElementById('account').onclick=showAccount;
+    document.getElementById('leaderboard').onclick=showLeaderboard;
     document.getElementById('colors').onclick=showLivery;
     document.getElementById('race').onclick=()=>showRace();
     document.getElementById('edit').onclick=()=>showEditor(false);
@@ -649,71 +848,239 @@ button { cursor: pointer; }
 
   function showTrackSelector(){
     cleanScreen();
-    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">TRACK SELECT</div><div class="subtle pixel">Original circuits + four special circuits</div></div><div class="selector-wrap"><div id="trackSections"></div></div></section>`;
+    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">TRACK SELECT</div><div class="subtle pixel">Built-in + community circuits</div><button id="createCircuit" class="btn cyan" style="margin-left:auto">${isRegisteredPlayer()?'+ CREATE CIRCUIT':'LOGIN TO CREATE'}</button></div><div class="selector-wrap"><div id="trackSections"></div></div></section>`;
     document.getElementById('back').onclick=showMenu;
+    document.getElementById('createCircuit').onclick=()=>isRegisteredPlayer()?showCircuitCreator():showAccount();
     const root=document.getElementById('trackSections');
-    function section(title,desc,names){
-      const sec=document.createElement('section');sec.innerHTML=`<div class="section-head"><h2>${title}</h2><span class="subtle pixel">${desc}</span></div><div class="track-grid"></div>`;const grid=sec.querySelector('.track-grid');
+
+    function section(title,desc,names,emptyMessage='No circuits available.'){
+      const sec=document.createElement('section');
+      sec.innerHTML=`<div class="section-head"><h2>${escapeHtml(title)}</h2><span class="subtle pixel">${escapeHtml(desc)}</span></div><div class="track-grid"></div>`;
+      const grid=sec.querySelector('.track-grid');
+
+      if(!names.length){
+        const empty=document.createElement('div');
+        empty.className='subtle pixel';
+        empty.style.padding='18px 4px 28px';
+        empty.textContent=emptyMessage;
+        grid.replaceWith(empty);
+        root.appendChild(sec);
+        return;
+      }
+
       names.forEach(name=>{
-        const b=document.createElement('button');b.className='track-card'+(state.track===name?' selected':'');
-        b.innerHTML=`<div><h3>${name}</h3><div class="meta">${TRACKS[name].country}</div><canvas class="track-logo" width="360" height="110"></canvas></div>${flagMarkup(name)}`;
-        grid.appendChild(b);drawTrackLogo(b.querySelector('canvas'),name);b.onclick=()=>{state.track=name;storage.set('fvr.track',name);cloudSaveCurrentState();showMenu();};
-      });root.appendChild(sec);
+        const spec=TRACKS[name];
+        if(!spec)return;
+        const wrap=document.createElement('div');
+        wrap.style.display='grid';wrap.style.gap='8px';
+        const b=document.createElement('button');
+        b.className='track-card'+(state.track===name?' selected':'');
+        b.style.width='100%';
+        const creator=spec.group==='community' && spec.creatorUsername ? `<div class="meta">by ${escapeHtml(spec.creatorUsername)}</div>` : '';
+        b.innerHTML=`<div><h3>${escapeHtml(trackDisplayName(name))}</h3><div class="meta">${escapeHtml(spec.country)}</div>${creator}<canvas class="track-logo" width="360" height="110"></canvas></div>${flagMarkup(name)}`;
+        wrap.appendChild(b);
+        drawTrackLogo(b.querySelector('canvas'),name);
+        b.onclick=()=>{state.track=name;storage.set('fvr.track',name);cloudSaveCurrentState();showMenu();};
+        if(spec.group==='community' && canEditCommunityTrack(name)){
+          const edit=document.createElement('button');
+          edit.className='btn cyan';
+          edit.textContent='EDIT CIRCUIT';
+          edit.onclick=()=>showCircuitCreator(name);
+          wrap.appendChild(edit);
+        }
+        grid.appendChild(wrap);
+      });
+      root.appendChild(sec);
     }
+
     section('ORIGINAL TRACKS','Custom circuits built for the game',ORIGINAL);
     section('SPECIAL TRACKS','F1-inspired circuits',SPECIAL);
+    section('COMMUNITY CIRCUITS','Circuits published by players',COMMUNITY,'No community circuits yet. Create the first one!');
+  }
+
+  function showCircuitCreator(editKey=null){
+    const editing=!!editKey;
+    const existing=editing ? TRACKS[editKey] : null;
+    if(editing && !canEditCommunityTrack(editKey)){toast('You do not have permission to edit this circuit.');showTrackSelector();return;}
+    if(!isRegisteredPlayer()){showAccount();return;}
+
+    cleanScreen();
+    APP.innerHTML=`<section class="screen">
+      <div class="topbar"><button id="builderBack" class="btn">← TRACKS</button><div class="title pixel">${editing?'EDIT CIRCUIT':'CIRCUIT BUILDER'}</div><div class="subtle">${editing?'Only selected editors can save changes':'Click the canvas to place control points'}</div></div>
+      <div style="max-width:1100px;margin:0 auto;padding:24px">
+        <canvas id="builderCanvas" width="1000" height="600" style="width:100%;height:auto;aspect-ratio:5/3;background:#315b34;border:2px solid #596171;display:block;touch-action:none"></canvas>
+        <div style="margin-top:16px;background:#151923;border:1px solid #373f4e;padding:18px;display:grid;gap:14px">
+          <label class="pixel" style="font-size:12px">CIRCUIT NAME<input id="circuitName" maxlength="40" placeholder="My Circuit" value="${editing?escapeHtml(trackDisplayName(editKey)):''}" style="display:block;width:100%;margin-top:6px;padding:10px;background:#090d13;color:#fff;border:1px solid #4b5667"></label>
+          <label class="pixel" style="font-size:12px">THEME<select id="circuitTheme" style="display:block;width:100%;margin-top:6px;padding:10px;background:#090d13;color:#fff;border:1px solid #4b5667"><option value="sunset">Sunset</option><option value="forest">Forest</option><option value="grand_prix">Grand Prix</option><option value="harbor">Harbor</option><option value="desert">Desert</option></select></label>
+          <label class="pixel" style="font-size:12px">ROAD WIDTH: <span id="roadWidthCopy">${editing?existing.roadWidth:100}</span><input id="roadWidth" type="range" min="70" max="140" value="${editing?existing.roadWidth:100}" style="display:block;width:100%;margin-top:8px"></label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="undoPoint" class="btn">UNDO</button><button id="clearPoints" class="btn">CLEAR</button><button id="publishCircuit" class="btn primary" style="margin-left:auto">${editing?'SAVE CHANGES':'PUBLISH CIRCUIT'}</button></div>
+          <div id="builderStatus" class="subtle pixel">0 points • minimum 6</div>
+        </div>
+      </div>
+    </section>`;
+
+    const canvas=document.getElementById('builderCanvas');
+    const ctx=canvas.getContext('2d');
+    const points=editing ? existing.points.map(p=>[...p]) : [];
+    const roadWidthInput=document.getElementById('roadWidth');
+    const roadWidthCopy=document.getElementById('roadWidthCopy');
+    const themeInput=document.getElementById('circuitTheme');
+    const status=document.getElementById('builderStatus');
+    if(editing && THEME[existing.theme])themeInput.value=existing.theme;
+
+    function drawBuilder(){
+      const theme=THEME[themeInput.value] || THEME.forest;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle=theme.ground;ctx.fillRect(0,0,canvas.width,canvas.height);
+      if(points.length>=2){
+        const preview=points.length>=4 ? catmullRomClosed(points,18) : points;
+        const road=Number(roadWidthInput.value);
+        if(points.length>=4){
+          strokeClosed(ctx,preview,theme.verge,road+30);strokeClosed(ctx,preview,'#f6f6f2',road+17);strokeClosed(ctx,preview,'#292c31',road+1);strokeClosed(ctx,preview,'#303339',Math.max(12,road-15));
+        }else{
+          ctx.beginPath();ctx.moveTo(preview[0][0],preview[0][1]);for(let i=1;i<preview.length;i++)ctx.lineTo(preview[i][0],preview[i][1]);ctx.strokeStyle='#292c31';ctx.lineWidth=road;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+        }
+      }
+      points.forEach(([x,y],i)=>{ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.fillStyle=i===0?'#72f1a5':'#6ee7ff';ctx.fill();ctx.strokeStyle='#081018';ctx.lineWidth=2;ctx.stroke();});
+      status.textContent=`${points.length} points • minimum 6${editing?' • editing existing circuit':''}`;
+    }
+
+    canvas.addEventListener('pointerdown',event=>{
+      const rect=canvas.getBoundingClientRect();const x=(event.clientX-rect.left)*canvas.width/rect.width;const y=(event.clientY-rect.top)*canvas.height/rect.height;const margin=20;
+      points.push([Math.round(clamp(x,margin,canvas.width-margin)),Math.round(clamp(y,margin,canvas.height-margin))]);drawBuilder();
+    });
+    roadWidthInput.oninput=()=>{roadWidthCopy.textContent=roadWidthInput.value;drawBuilder();};
+    themeInput.onchange=drawBuilder;
+    document.getElementById('undoPoint').onclick=()=>{points.pop();drawBuilder();};
+    document.getElementById('clearPoints').onclick=()=>{points.length=0;drawBuilder();};
+    document.getElementById('builderBack').onclick=showTrackSelector;
+
+    document.getElementById('publishCircuit').onclick=async()=>{
+      const button=document.getElementById('publishCircuit');const name=document.getElementById('circuitName').value.trim();
+      if(name.length<3){status.textContent='Circuit name must be at least 3 characters.';return;}
+      if(points.length<6){status.textContent='Place at least 6 control points.';return;}
+      if(!window.firebaseGame){status.textContent='Firebase is not ready. Try again in a moment.';return;}
+      button.disabled=true;button.textContent=editing?'SAVING...':'PUBLISHING...';
+      const payload={name,roadWidth:Number(roadWidthInput.value),theme:themeInput.value,points:points.map(p=>[...p]),checkpoints:editing&&Array.isArray(existing.checkpoints)?[...existing.checkpoints]:[0.18,0.36,0.54,0.72,0.90]};
+      try{
+        let id;
+        if(editing){
+          if(!window.firebaseGame.updateCircuit)throw new Error('Circuit editing is unavailable.');
+          await window.firebaseGame.updateCircuit(existing.firebaseId,payload);id=existing.firebaseId;
+        }else{
+          if(!window.firebaseGame.uploadCircuit)throw new Error('Circuit publishing is unavailable.');
+          id=await window.firebaseGame.uploadCircuit(payload);
+        }
+        await window.firebaseGame.refreshCommunityCircuits();
+        const key='community:'+id;if(TRACKS[key]){state.track=key;storage.set('fvr.track',key);await cloudSaveCurrentState();}
+        toast(editing?'Circuit updated!':'Circuit published!');showTrackSelector();
+      }catch(error){
+        console.error(editing?'Circuit edit failed:':'Circuit publish failed:',error);status.textContent=(editing?'Save failed: ':'Upload failed: ')+(error&&error.message?error.message:String(error));button.disabled=false;button.textContent=editing?'SAVE CHANGES':'PUBLISH CIRCUIT';
+      }
+    };
+    drawBuilder();
+  }
+
+
+  function showAccount(){
+    cleanScreen();
+    const registered=isRegisteredPlayer();
+    const role=state.account.isEditor?'SELECTED CIRCUIT EDITOR':'PLAYER';
+    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="accountBack" class="btn">← MENU</button><div class="title pixel">PLAYER ACCOUNT</div></div><div class="help-card" style="max-width:680px">
+      ${registered?`
+        <div class="overlay-kicker">SIGNED IN</div><h2 style="margin-bottom:4px">${escapeHtml(state.account.username)}</h2><p class="subtle">Role: <b>${role}</b></p><p class="subtle" style="word-break:break-all">UID: ${escapeHtml(state.account.uid)}</p>
+        <p>Your username/password account keeps the same Firebase identity when you return on another browser or device.</p>
+        <button id="logoutAccount" class="btn danger">LOG OUT TO GUEST</button>
+      `:`
+        <div class="overlay-kicker">NO EMAIL REQUIRED IN THE GAME</div><h2>Login or create an account</h2>
+        <p class="subtle">Username: 3–20 characters, letters/numbers/underscore. Password: at least 6 characters.</p>
+        <label class="pixel" style="font-size:12px">USERNAME<input id="accountUsername" maxlength="20" autocomplete="username" style="display:block;width:100%;margin:6px 0 14px;padding:11px;background:#090d13;color:#fff;border:1px solid #4b5667"></label>
+        <label class="pixel" style="font-size:12px">PASSWORD<input id="accountPassword" type="password" autocomplete="current-password" style="display:block;width:100%;margin:6px 0 14px;padding:11px;background:#090d13;color:#fff;border:1px solid #4b5667"></label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="loginAccount" class="btn primary">LOGIN</button><button id="registerAccount" class="btn cyan">CREATE ACCOUNT</button></div>
+        <div id="accountStatus" class="validation" style="margin-top:14px"></div>
+      `}
+    </div></section>`;
+    document.getElementById('accountBack').onclick=showMenu;
+    if(registered){
+      document.getElementById('logoutAccount').onclick=async()=>{try{await window.firebaseGame.logoutToGuest();toast('Guest mode');showMenu();}catch(error){toast(error.message||String(error));}};
+      return;
+    }
+    const status=document.getElementById('accountStatus');
+    const values=()=>({username:document.getElementById('accountUsername').value.trim(),password:document.getElementById('accountPassword').value});
+    const run=async(mode)=>{
+      if(!window.firebaseGame){status.textContent='Firebase is still loading.';return;}
+      const {username,password}=values();status.textContent=mode==='register'?'Creating account...':'Logging in...';
+      try{
+        if(mode==='register')await window.firebaseGame.registerUsernamePassword(username,password);else await window.firebaseGame.loginUsernamePassword(username,password);
+        toast(mode==='register'?'Account created':'Logged in');showMenu();
+      }catch(error){console.error(error);status.textContent=error&&error.message?error.message:String(error);}
+    };
+    document.getElementById('loginAccount').onclick=()=>run('login');
+    document.getElementById('registerAccount').onclick=()=>run('register');
+  }
+
+  function showLeaderboard(){
+    cleanScreen();
+    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="leaderBack" class="btn">← MENU</button><div class="title pixel">GLOBAL LEADERBOARD</div><div class="subtle pixel">Higher score = faster completed lap</div></div><div class="help-card" style="max-width:900px"><p class="subtle">Score formula: <code>round(100000 / finish time in seconds)</code>. Only username/password accounts are submitted.</p><div id="leaderStatus" class="subtle pixel">Loading Firebase scoreboard...</div><div id="leaderRows" style="display:grid;gap:8px;margin-top:16px"></div></div></section>`;
+    document.getElementById('leaderBack').onclick=showMenu;
+    const status=document.getElementById('leaderStatus'),rows=document.getElementById('leaderRows');
+    (async()=>{
+      try{
+        if(!window.firebaseGame || !window.firebaseGame.getLeaderboard)throw new Error('Firebase leaderboard is not ready.');
+        const entries=await window.firebaseGame.getLeaderboard();
+        status.textContent=entries.length?`Top ${entries.length} players`:'No scores yet.';
+        rows.innerHTML=entries.map((e,i)=>`<div style="display:grid;grid-template-columns:54px minmax(120px,1fr) 110px minmax(130px,1fr) 90px;gap:10px;align-items:center;background:#0d1118;border:1px solid #343947;padding:11px"><b class="pixel">#${i+1}</b><span>${escapeHtml(e.username)}</span><b>${Number(e.score).toLocaleString()}</b><span class="subtle">${escapeHtml(e.trackName||'Unknown track')}</span><span>${Number(e.finishTime).toFixed(2)} s</span></div>`).join('');
+      }catch(error){console.error(error);status.textContent='Could not load leaderboard: '+(error&&error.message?error.message:String(error));}
+    })();
   }
 
   function showLivery(){
     cleanScreen();
+    state.activeColor='primary';
+    // Secondary, accent and tire colors are fixed to avoid the old multi-layer color bugs.
+    state.palette=normalizePalette(state.palette);
     APP.innerHTML=`<section class="screen livery-screen"><div class="livery-stage"><img class="livery-bg" src="${liveryBackground}" alt="Formula garage"><div class="livery-overlay">
-      <div class="livery-tabs"><button data-channel="primary" class="livery-tab">BASE COLOR</button><button data-channel="secondary" class="livery-tab">SECONDARY COLOR</button><button data-channel="accent" class="livery-tab">ACCENT</button><button data-channel="wheel" class="livery-tab">TIRE COLOR</button><button id="confirm" class="livery-tab confirm-float">CONFIRM</button></div>
+      <div class="livery-tabs"><button data-channel="primary" class="livery-tab active">MAIN CAR COLOR</button><button id="confirm" class="livery-tab confirm-float">CONFIRM</button></div>
       <canvas id="liveryCar" class="livery-car"></canvas><div id="swatches" class="livery-palette"></div><button id="back" class="btn livery-back">← MENU</button>
     </div></div></section>`;
     const car=document.getElementById('liveryCar');
-    function refresh(){renderSideCar(car,state.palette);document.querySelectorAll('.livery-tab[data-channel]').forEach(b=>b.classList.toggle('active',b.dataset.channel===state.activeColor));document.querySelectorAll('.swatch').forEach(b=>b.classList.toggle('selected',b.dataset.color.toLowerCase()===state.palette[state.activeColor].toLowerCase()));storage.set('fvr.palette',JSON.stringify(state.palette));}
-    document.querySelectorAll('.livery-tab[data-channel]').forEach(b=>b.onclick=()=>{state.activeColor=b.dataset.channel;refresh();});
-    const sw=document.getElementById('swatches');SWATCHES.forEach(c=>{const b=document.createElement('button');b.className='swatch';b.dataset.color=c;b.style.background=c;b.title=c;b.onclick=()=>{state.palette[state.activeColor]=c;refresh();};sw.appendChild(b);});
-    document.getElementById('confirm').onclick=()=>{cloudSaveCurrentState();showMenu();};document.getElementById('back').onclick=showMenu;refresh();
+    function refresh(){
+      state.palette=normalizePalette(state.palette);
+      renderSideCar(car,state.palette);
+      document.querySelectorAll('.swatch').forEach(b=>b.classList.toggle('selected',b.dataset.color.toLowerCase()===state.palette.primary.toLowerCase()));
+      storage.set('fvr.palette',JSON.stringify(state.palette));
+    }
+    const sw=document.getElementById('swatches');
+    SWATCHES.forEach(c=>{const b=document.createElement('button');b.className='swatch';b.dataset.color=c;b.style.background=c;b.title='Main color '+c;b.onclick=()=>{state.palette.primary=c;refresh();};sw.appendChild(b);});
+    document.getElementById('confirm').onclick=async()=>{await cloudSaveCurrentState();showMenu();};
+    document.getElementById('back').onclick=showMenu;
+    refresh();
   }
 
   function showEditor(playAfter=false){
     cleanScreen();
-    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">ACCELERATION INPUT</div><div class="subtle">time, duration, acceleration, angle</div></div><div class="editor-shell"><div class="editor-card"><textarea id="input" spellcheck="false"></textarea><div id="validation" class="validation"></div><div class="editor-actions"><button id="save" class="btn primary">SAVE INPUT</button><button id="play" class="btn">APPLY & PLAY</button><button id="restore" class="btn">RESTORE DEFAULT</button></div><div class="editor-note">Saved locally first, then synced to Firebase when available. Ctrl+S also saves.</div></div></div></section>`;
+    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">ACCELERATION INPUT</div><div class="subtle">time, duration, acceleration (0-100), angle</div></div><div class="editor-shell"><div class="editor-card"><textarea id="input" spellcheck="false"></textarea><div id="validation" class="validation"></div><div class="editor-actions"><button id="save" class="btn primary">SAVE INPUT</button><button id="play" class="btn">APPLY & PLAY</button><button id="restore" class="btn">RESTORE DEFAULT</button></div><div class="editor-note">Acceleration is limited to 0–100. Saved locally and synced to Firebase when available. Ctrl+S also saves.</div></div></div></section>`;
     const ta=document.getElementById('input'),val=document.getElementById('validation');ta.value=state.input;
     const validate=()=>{try{const commands=parseInput(ta.value);val.className='validation good';val.textContent=`Valid: ${commands.length} acceleration commands`;return commands;}catch(e){val.className='validation';val.textContent=e.message;return null;}};
     ta.addEventListener('input',validate);validate();
-    const save=async()=>{
-      if(!validate())return false;
-      state.input=ta.value.trimEnd()+'\n';
-      storage.set('fvr.input',state.input);
-
-      const cloudSaved=await cloudSaveCurrentState();
-      toast(cloudSaved ? 'Saved locally + Firebase' : 'Saved locally — Firebase unavailable');
-      return true;
-    };
-    document.getElementById('save').onclick=async()=>{await save();};
-    document.getElementById('play').onclick=async()=>{if(await save())showRace();};
-    document.getElementById('restore').onclick=()=>{ta.value=DEFAULT_INPUT;validate();toast('Default input restored in editor');};
-    document.getElementById('back').onclick=showMenu;
-    const keyHandler=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();}};
-    window.addEventListener('keydown',keyHandler);
-    state.screenCleanup=()=>window.removeEventListener('keydown',keyHandler);
+    const save=async()=>{if(!validate())return false;state.input=ta.value.trimEnd()+'\n';storage.set('fvr.input',state.input);const cloudSaved=await cloudSaveCurrentState();toast(cloudSaved?'Saved locally + Firebase':'Saved locally — Firebase unavailable');return true;};
+    document.getElementById('save').onclick=async()=>{await save();};document.getElementById('play').onclick=async()=>{if(await save())showRace();};document.getElementById('restore').onclick=()=>{ta.value=DEFAULT_INPUT;validate();toast('Default input restored in editor');};document.getElementById('back').onclick=showMenu;
+    const keyHandler=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();}};window.addEventListener('keydown',keyHandler);state.screenCleanup=()=>window.removeEventListener('keydown',keyHandler);
   }
 
   function showHelp(){
-    cleanScreen();APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">HOW IT WORKS</div></div><div class="help-card"><h2>Formula Vector Racer</h2><p>1. Pick a track and customize the car colors if you want.</p><p>2. Open <b>Edit Acceleration</b>. Every line is <code>time, duration, acceleration, angle</code>.</p><p>3. Start the race. The <span style="color:#ff3b30"><b>V</b></span> arrow is velocity and the <span style="color:#00c8ff"><b>A</b></span> arrow is acceleration.</p><p>4. Clear the highlighted checkpoints in order without leaving the road.</p><p>Angles use the same convention everywhere: <b>0° right, 90° up, 180° left, 270° down</b>.</p><p>Your acceleration input and car colors are stored in the browser automatically when you save.</p></div></section>`;document.getElementById('back').onclick=showMenu;
+    cleanScreen();APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">HOW IT WORKS</div></div><div class="help-card"><h2>Formula Vector Racer</h2><p>1. Pick a track and customize the car's main color if you want.</p><p>2. Open <b>Edit Acceleration</b>. Every line is <code>time, duration, acceleration, angle</code>.</p><p>3. Start the race. The <span style="color:#ff3b30"><b>V</b></span> arrow is velocity and the <span style="color:#00c8ff"><b>A</b></span> arrow is acceleration.</p><p>4. Clear the highlighted checkpoints in order without leaving the road.</p><p>Angles use the same convention everywhere: <b>0° right, 90° up, 180° left, 270° down</b>.</p><p>Your acceleration input and main car color are stored in the browser automatically when you save.</p></div></section>`;document.getElementById('back').onclick=showMenu;
   }
 
   class RaceGame {
     constructor(level,commands){
       this.level=level;this.commands=commands;this.running=false;this.paused=false;this.countdown=false;this.timer=null;this.countdownTimers=[];
       this.maxTime=Math.max(...commands.map(c=>c.time+c.duration));this.maxSteps=Math.max(1,Math.ceil(this.maxTime/DT)+1);
-      this.speedMax=Math.max(500,Math.ceil(Math.max(commands.reduce((s,c)=>s+Math.abs(c.accel)*c.duration,0),1)/1000)*1000);
+      this.speedMax=Math.max(500,Math.ceil(Math.max(commands.reduce((sum,c)=>sum+Math.abs(c.accel)*ACCELERATION_SCALE*c.duration,0),1)/1000)*1000);
       this.resetState();
     }
     resetState(){this.t=0;this.stepIndex=0;this.x=[...this.level.start];this.v=[0,0];this.a=[0,0];this.heading=this.level.startHeading;this.checkpoint=0;this.progress=0;this.path=[...[[...this.x]]];this.currentMag=0;this.currentAngle=0;}
-    activeAccel(t){for(const c of this.commands)if(c.time<=t&&t<=c.time+c.duration){const a=c.angle*Math.PI/180;return [c.accel*Math.cos(a),c.accel*Math.sin(a),c.accel,c.angle];}return [0,0,0,0];}
+    activeAccel(t){for(const c of this.commands)if(c.time<=t&&t<=c.time+c.duration){const a=c.angle*Math.PI/180,physicsAccel=c.accel*ACCELERATION_SCALE;return [physicsAccel*Math.cos(a),physicsAccel*Math.sin(a),c.accel,c.angle];}return [0,0,0,0];}
     onTrack(x,y){const sy=ARENA_H-y;return distanceToPolyline(x,sy,this.level.screenLine)<=this.level.spec.roadWidth/2+2;}
     checkpointContains(cp,x,y){return hypot(x-cp.x,y-cp.y)<=cp.r;}
     lapProgress(){
@@ -733,23 +1100,31 @@ button { cursor: pointer; }
   function showRace(){
     let commands;try{commands=parseInput(state.input);}catch(e){toast(e.message);showEditor(false);return;}
     cleanScreen();const level=makeLevel(state.track),game=new RaceGame(level,commands);
-    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">Formula Vector Racer</div><div class="accent pixel">${state.track.toUpperCase()}</div></div>
+    APP.innerHTML=`<section class="screen"><div class="topbar"><button id="back" class="btn">← MENU</button><div class="title pixel">Formula Vector Racer</div><div class="accent pixel">${escapeHtml(trackDisplayName(state.track).toUpperCase())}</div></div>
       <div class="race-layout"><div class="track-frame"><canvas id="raceCanvas" width="1000" height="600"></canvas></div><aside class="race-panel">
-        <div class="panel-track-title">${state.track.toUpperCase()}</div><div id="lights" class="start-lights">${'<span class="light"></span>'.repeat(5)}</div>
+        <div class="panel-track-title">${escapeHtml(trackDisplayName(state.track).toUpperCase())}</div><div id="raceNotice" class="race-notice" aria-live="polite"></div><div id="lights" class="start-lights">${'<span class="light"></span>'.repeat(5)}</div>
         <div class="panel-actions"><button id="start" class="btn primary">START</button><button id="pause" class="btn">PAUSE</button><button id="reset" class="btn">RESET</button><button id="edit" class="btn">EDIT INPUT</button></div>
         <div class="panel-divider"></div><div class="pixel subtle">LIVE INDICATORS</div><div class="indicators"><div id="progressCopy" class="progress-copy">0.0%  •  100.0% left</div><div class="progress-track"><div id="progressFill" class="progress-fill"></div></div><div class="gauge-row"><canvas id="speedGauge" class="gauge" width="132" height="108"></canvas><canvas id="headingGauge" class="gauge" width="132" height="108"></canvas></div></div>
         <div class="panel-divider"></div><div class="pixel subtle">TELEMETRY</div><div id="telemetry" class="telemetry"></div>
         <div class="panel-divider"></div><div class="legend"><div class="v">V  Velocity vector</div><div class="a">A  Acceleration vector</div><div class="cp">◌  Active checkpoint</div></div>
       </aside></div><div id="modalRoot"></div></section>`;
-    const canvas=document.getElementById('raceCanvas'),ctx=canvas.getContext('2d');const startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause');
+    const canvas=document.getElementById('raceCanvas'),ctx=canvas.getContext('2d');const startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause'),resetBtn=document.getElementById('reset'),raceNotice=document.getElementById('raceNotice');
     const cleanup=()=>game.clearTimers();state.screenCleanup=cleanup;
     document.getElementById('back').onclick=()=>{cleanup();showMenu();};document.getElementById('edit').onclick=()=>{cleanup();showEditor(false);};
-    document.getElementById('reset').onclick=()=>resetRun();pauseBtn.onclick=()=>togglePause();startBtn.onclick=()=>startRun();
+    resetBtn.onclick=()=>resetRun();pauseBtn.onclick=()=>togglePause();startBtn.onclick=()=>startRun();
 
     function setLights(count=0,go=false){document.querySelectorAll('.light').forEach((l,i)=>{l.className='light'+(go?' go':i<count?' red':'');});}
     function showModal(title,message,actions){
       const root=document.getElementById('modalRoot');root.innerHTML=`<div class="overlay"><div class="overlay-card"><div class="overlay-kicker">RACE CONTROL</div><h2>${title}</h2><p>${message}</p><div class="overlay-actions"></div></div></div>`;
       const ar=root.querySelector('.overlay-actions');actions.forEach(a=>{const b=document.createElement('button');b.className='btn '+(a.primary?'primary':'');b.textContent=a.label;b.onclick=()=>{root.innerHTML='';a.action();};ar.appendChild(b);});
+    }
+    function clearRaceNotice(){
+      raceNotice.className='race-notice';
+      raceNotice.innerHTML='';
+    }
+    function showCrashNotice(){
+      raceNotice.className='race-notice visible crash';
+      raceNotice.innerHTML='<div class="race-notice-title">OFF TRACK</div><div class="race-notice-copy">The run is paused at the crash point so you can inspect the trajectory. Use RETRY or the single EDIT INPUT button below.</div>';
     }
     function draw(){
       ctx.clearRect(0,0,ARENA_W,ARENA_H);ctx.drawImage(level.background,0,0);
@@ -787,7 +1162,7 @@ button { cursor: pointer; }
     function drawSpeedGauge(c,speed,max){const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b1017';x.fillRect(0,0,c.width,c.height);x.fillStyle='#aab5c5';x.font='bold 9px Courier New';x.fillText('SPEED',10,17);const cx=66,cy=68,r=40;x.strokeStyle='#596573';x.lineWidth=4;x.beginPath();x.arc(cx,cy,r,Math.PI*1.11,Math.PI*1.89);x.stroke();const ratio=clamp(speed/max,0,1),deg=200+140*ratio,rad=deg*Math.PI/180,nx=cx+Math.cos(rad)*r*.82,ny=cy-Math.sin(rad)*r*.82;x.strokeStyle='#ff473f';x.lineWidth=4;x.beginPath();x.moveTo(cx,cy);x.lineTo(nx,ny);x.stroke();x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,4,0,Math.PI*2);x.fill();x.font='bold 16px Courier New';x.textAlign='center';x.fillText(Math.round(speed).toLocaleString(),cx,34);x.fillStyle='#7f8b9c';x.font='8px Courier New';x.fillText('units/s',cx,48);x.textAlign='left';x.fillText('0',10,96);x.textAlign='right';x.fillText(Math.round(max).toLocaleString(),122,96);x.textAlign='left';}
     function drawHeadingGauge(c,heading){const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b1017';x.fillRect(0,0,c.width,c.height);x.fillStyle='#aab5c5';x.font='bold 9px Courier New';x.fillText('HEADING',10,17);const cx=40,cy=60,r=25;x.strokeStyle='#647080';x.lineWidth=2;x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.stroke();x.fillStyle='#8c98a8';x.font='bold 7px Courier New';x.textAlign='center';x.fillText('90',cx,cy-r-6);x.fillText('270',cx,cy+r+12);x.textAlign='left';x.fillText('180',cx-r-17,cy+3);x.fillText('0',cx+r+8,cy+3);const a=heading*Math.PI/180,hx=cx+Math.cos(a)*r*.78,hy=cy-Math.sin(a)*r*.78;x.strokeStyle='#00c8ff';x.lineWidth=4;x.beginPath();x.moveTo(cx,cy);x.lineTo(hx,hy);x.stroke();x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,3,0,Math.PI*2);x.fill();x.font='bold 13px Courier New';x.textAlign='center';x.fillText(`${heading.toFixed(1)}°`,95,50);x.fillStyle='#7f8b9c';x.font='8px Courier New';x.fillText('0° right',95,68);x.fillText('90° up',95,80);x.textAlign='left';}
 
-    function resetRun(){game.clearTimers();game.running=false;game.paused=false;game.countdown=false;game.resetState();game.status='READY';startBtn.textContent='START';pauseBtn.textContent='PAUSE';setLights();draw();}
+    function resetRun(){game.clearTimers();game.running=false;game.paused=false;game.countdown=false;game.resetState();game.status='READY';startBtn.textContent='START';startBtn.disabled=false;pauseBtn.textContent='PAUSE';pauseBtn.disabled=false;resetBtn.textContent='RESET';clearRaceNotice();setLights();draw();}
     function startRun(){if(game.running&&!game.paused||game.countdown)return;if(game.stepIndex>=game.maxSteps)resetRun();game.running=false;game.paused=false;game.countdown=true;game.status='STARTING';startBtn.textContent='LIGHTS...';pauseBtn.textContent='PAUSE';let count=0;const tick=()=>{if(!game.countdown)return;if(count<5){count++;setLights(count);game.countdownTimers.push(setTimeout(tick,240));}else game.countdownTimers.push(setTimeout(launch,450));};tick();draw();}
     function launch(){if(!game.countdown)return;game.countdown=false;setLights(0,true);game.running=true;game.status='GO!';startBtn.textContent='RUNNING';setTimeout(()=>setLights(),280);schedule();}
     function togglePause(){if(!game.running)return;game.paused=!game.paused;pauseBtn.textContent=game.paused?'RESUME':'PAUSE';game.status=game.paused?'PAUSED':'RUNNING';draw();if(!game.paused)schedule();}
@@ -795,9 +1170,9 @@ button { cursor: pointer; }
     function step(){game.timer=null;if(!game.running||game.paused)return;if(game.stepIndex>=game.maxSteps){finishInput();return;}
       const [ax,ay,mag,ang]=game.activeAccel(game.t);game.a=[ax,ay];game.currentMag=mag;game.currentAngle=ang;game.v[0]+=ax*DT;game.v[1]+=ay*DT;const speed=hypot(game.v[0],game.v[1]);if(speed>1e-9)game.heading=Math.atan2(game.v[1],game.v[0])*180/Math.PI;
       const prev=[...game.x];game.x[0]+=game.v[0]*DT+.5*ax*DT*DT;game.x[1]+=game.v[1]*DT+.5*ay*DT*DT;game.t=game.stepIndex*DT;game.stepIndex++;
-      if(!game.onTrack(...game.x)){game.path.push(prev,[...game.x]);game.status='CRASHED';game.running=false;draw();showModal('OFF TRACK','The car left the circuit. Retry from the start or edit the acceleration input.',[{label:'Retry',primary:true,action:resetRun},{label:'Edit Input',action:()=>{cleanup();showEditor(false);}}]);return;}
+      if(!game.onTrack(...game.x)){game.path.push(prev,[...game.x]);game.status='CRASHED';game.running=false;startBtn.textContent='CRASHED';startBtn.disabled=true;pauseBtn.disabled=true;resetBtn.textContent='RETRY';showCrashNotice();draw();return;}
       game.path.push([...game.x]);if(game.path.length>1600)game.path=game.path.slice(-1600);if(game.checkpoint<level.checkpoints.length&&game.checkpointContains(level.checkpoints[game.checkpoint],...game.x))game.checkpoint++;game.status='RUNNING';draw();
-      if(game.checkpoint>=level.checkpoints.length){game.progress=1;game.running=false;game.status='FINISHED';draw();showModal('CHECKERED FLAG',`All checkpoints cleared in ${game.t.toFixed(2)} s.`,[{label:'Retry',primary:true,action:resetRun},{label:'Menu',action:()=>{cleanup();showMenu();}}]);return;}schedule();}
+      if(game.checkpoint>=level.checkpoints.length){game.progress=1;game.running=false;game.status='FINISHED';draw();void submitRaceScore(game.t);showModal('CHECKERED FLAG',`All checkpoints cleared in ${game.t.toFixed(2)} s.`,[{label:'Retry',primary:true,action:resetRun},{label:'Leaderboard',action:()=>{cleanup();showLeaderboard();}},{label:'Menu',action:()=>{cleanup();showMenu();}}]);return;}schedule();}
     function finishInput(){game.running=false;game.status='INPUT ENDED';draw();const speed=hypot(game.v[0],game.v[1]);if(speed>=CONTINUE_MIN_SPEED&&game.onTrack(...game.x)){showModal('PROGRAM ENDED','The acceleration program has ended, but the car is still safely on track. You can continue coasting, edit the input, or retry the run.',[{label:'Retry',action:resetRun},{label:'Edit Input',action:()=>{cleanup();showEditor(false);}},{label:'Continue',primary:true,action:()=>{game.maxSteps=Math.max(game.maxSteps,game.stepIndex+Math.ceil(COAST_EXTENSION_S/DT));game.running=true;game.status='COASTING';startBtn.textContent='RUNNING';schedule();}}]);}else{const msg=speed>ALMOST_STOPPED_SPEED?'The acceleration program ended before all checkpoints were cleared. The car is too slow to keep going usefully.':'The acceleration program ended before all checkpoints were cleared. The car has almost stopped.';showModal('PROGRAM ENDED',msg,[{label:'Retry',action:resetRun},{label:'Edit Input',primary:true,action:()=>{cleanup();showEditor(false);}}]);}}
     game.status='READY';draw();
   }
@@ -821,7 +1196,8 @@ button { cursor: pointer; }
 </script>
 <script type="module">
 // ============================================================
-// FIREBASE: Anonymous Authentication + Cloud Firestore
+// FIREBASE: guest auth + username/password accounts + saves
+//           + selected circuit editors + global leaderboard
 // ============================================================
 
 import { initializeApp }
@@ -830,6 +1206,9 @@ from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   getAuth,
   signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence
@@ -841,11 +1220,17 @@ import {
   doc,
   setDoc,
   getDoc,
+  updateDoc,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  limit,
+  orderBy,
   serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
-// Your Firebase Web App configuration.
 const firebaseConfig = {
   apiKey: "AIzaSyD0CNcgAgbAX9YdTaUXR9i5UpxQf4eCjeA",
   authDomain: "f1vectorracer.firebaseapp.com",
@@ -855,84 +1240,266 @@ const firebaseConfig = {
   appId: "1:862668348537:web:fb860f6028ad6c768a08a8"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
+const firebaseApp=initializeApp(firebaseConfig);
+const auth=getAuth(firebaseApp);
+const db=getFirestore(firebaseApp);
 
-// Keep the same anonymous Firebase identity when the player reloads the site
-// in the same browser (until that site's browser data is cleared).
-const firebaseReady = (async () => {
-  await setPersistence(auth, browserLocalPersistence);
+const USERNAME_RE=/^[A-Za-z0-9_]{3,20}$/;
+const INTERNAL_DOMAIN='players.fvr.invalid';
+const ALLOWED_THEMES=new Set(['sunset','forest','grand_prix','harbor','desert']);
 
-  if (auth.currentUser) {
-    return auth.currentUser;
-  }
+function normalizeUsername(username){
+  const value=String(username||'').trim();
+  if(!USERNAME_RE.test(value))throw new Error('Username must be 3–20 letters, numbers, or underscores.');
+  return value.toLowerCase();
+}
+function internalEmail(username){return `${normalizeUsername(username)}@${INTERNAL_DOMAIN}`;}
+function usernameFromUser(user){
+  if(!user || user.isAnonymous || !user.email)return 'Guest';
+  return user.email.toLowerCase().endsWith('@'+INTERNAL_DOMAIN) ? user.email.slice(0,user.email.indexOf('@')) : 'Player';
+}
+function currentUser(){return auth.currentUser;}
 
-  const credential = await signInAnonymously(auth);
+function firstAuthState(){
+  return new Promise((resolve,reject)=>{
+    let unsubscribe=()=>{};
+    unsubscribe=onAuthStateChanged(auth,user=>{unsubscribe();resolve(user);},reject);
+  });
+}
+
+const firebaseReady=(async()=>{
+  await setPersistence(auth,browserLocalPersistence);
+  const existing=await firstAuthState();
+  if(existing)return existing;
+  const credential=await signInAnonymously(auth);
   return credential.user;
 })();
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log('Firebase anonymous player connected:', user.uid);
+async function isSelectedEditor(user=currentUser()){
+  if(!user || user.isAnonymous)return false;
+  const snap=await getDoc(doc(db,'editors',user.uid));
+  return snap.exists() && snap.data()?.enabled===true;
+}
+
+async function emitAuthChanged(user=currentUser()){
+  if(!user)return;
+  let editor=false;
+  try{editor=await isSelectedEditor(user);}catch(error){console.warn('Editor-role check failed:',error);}
+  window.dispatchEvent(new CustomEvent('fvr-auth-changed',{detail:{
+    uid:user.uid,
+    username:usernameFromUser(user),
+    isAnonymous:user.isAnonymous,
+    isEditor:editor
+  }}));
+}
+
+onAuthStateChanged(auth,user=>{
+  if(user){
+    console.log(user.isAnonymous?'Firebase guest connected:':'Firebase account connected:',user.uid);
+    void emitAuthChanged(user);
   }
 });
 
-async function saveToCloud(saveData) {
-  const user = await firebaseReady;
+async function registerUsernamePassword(username,password){
+  const key=normalizeUsername(username);
+  if(String(password||'').length<6)throw new Error('Password must be at least 6 characters.');
+  try{
+    const credential=await createUserWithEmailAndPassword(auth,`${key}@${INTERNAL_DOMAIN}`,String(password));
+    await setDoc(doc(db,'players',credential.user.uid),{
+      username:key,
+      accountCreatedAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    if(typeof window.getFvrSaveData==='function')await saveToCloud(window.getFvrSaveData());
+    await emitAuthChanged(credential.user);
+    const save=await loadFromCloud();
+    if(save)window.dispatchEvent(new CustomEvent('fvr-cloud-loaded',{detail:save}));
+    return {uid:credential.user.uid,username:key};
+  }catch(error){
+    if(error?.code==='auth/email-already-in-use')throw new Error('That username is already taken.');
+    if(error?.code==='auth/weak-password')throw new Error('Password is too weak.');
+    throw error;
+  }
+}
 
-  await setDoc(
-    doc(db, 'players', user.uid),
-    {
-      ...saveData,
-      updatedAt: serverTimestamp()
-    },
-    { merge: true }
-  );
+async function loginUsernamePassword(username,password){
+  const email=internalEmail(username);
+  try{
+    const credential=await signInWithEmailAndPassword(auth,email,String(password||''));
+    await emitAuthChanged(credential.user);
+    const save=await loadFromCloud();
+    if(save)window.dispatchEvent(new CustomEvent('fvr-cloud-loaded',{detail:save}));
+    return {uid:credential.user.uid,username:usernameFromUser(credential.user)};
+  }catch(error){
+    if(error?.code==='auth/invalid-credential' || error?.code==='auth/user-not-found' || error?.code==='auth/wrong-password')throw new Error('Invalid username or password.');
+    throw error;
+  }
+}
 
+async function logoutToGuest(){
+  await signOut(auth);
+  const credential=await signInAnonymously(auth);
+  await emitAuthChanged(credential.user);
+  return credential.user.uid;
+}
+
+async function requireUser(){
+  return currentUser() || await firebaseReady;
+}
+async function requireRegisteredUser(){
+  const user=await requireUser();
+  if(!user || user.isAnonymous)throw new Error('Login with a username and password first.');
+  return user;
+}
+
+async function saveToCloud(saveData){
+  const user=await requireUser();
+  await setDoc(doc(db,'players',user.uid),{...saveData,username:usernameFromUser(user),updatedAt:serverTimestamp()},{merge:true});
   return user.uid;
 }
 
-async function loadFromCloud() {
-  const user = await firebaseReady;
-  const snapshot = await getDoc(doc(db, 'players', user.uid));
-
-  if (!snapshot.exists()) return null;
-  return snapshot.data();
+async function loadFromCloud(){
+  const user=await requireUser();
+  const snapshot=await getDoc(doc(db,'players',user.uid));
+  return snapshot.exists()?snapshot.data():null;
 }
 
-// Expose a small API to the non-module game script above.
-window.firebaseGame = {
-  auth,
-  db,
-  ready: firebaseReady,
-  saveToCloud,
-  loadFromCloud
+function normalizeCircuit(snapshot){
+  const data=snapshot.data();
+  if(!data || data.published!==true)return null;
+  if(typeof data.name!=='string' || data.name.trim().length<3 || data.name.trim().length>40)return null;
+  if(!ALLOWED_THEMES.has(data.theme))return null;
+  if(!Array.isArray(data.points) || data.points.length<6 || data.points.length>60)return null;
+  if(!Array.isArray(data.checkpoints) || data.checkpoints.length<3 || data.checkpoints.length>8)return null;
+  const points=[];
+  for(const point of data.points){
+    if(!point || typeof point!=='object')return null;
+    const x=Number(point.x),y=Number(point.y);
+    if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||x>1000||y<0||y>600)return null;
+    points.push([x,y]);
+  }
+  const checkpoints=data.checkpoints.map(Number);
+  if(checkpoints.some(v=>!Number.isFinite(v)||v<=0||v>=1))return null;
+  const roadWidth=Number(data.roadWidth);
+  if(!Number.isFinite(roadWidth)||roadWidth<70||roadWidth>140)return null;
+  return {
+    id:snapshot.id,name:data.name.trim(),roadWidth,theme:data.theme,
+    seed:Number.isFinite(Number(data.seed))?Number(data.seed):1,
+    checkpoints,points,creatorId:typeof data.creatorId==='string'?data.creatorId:'',
+    creatorUsername:typeof data.creatorUsername==='string'?data.creatorUsername:'',published:true
+  };
+}
+
+function validateCircuitPayload(circuit){
+  if(!circuit || typeof circuit.name!=='string')throw new Error('Invalid circuit.');
+  const name=circuit.name.trim();
+  if(name.length<3||name.length>40)throw new Error('Circuit name must contain 3–40 characters.');
+  if(!Array.isArray(circuit.points)||circuit.points.length<6||circuit.points.length>60)throw new Error('Circuit must contain 6–60 points.');
+  if(!ALLOWED_THEMES.has(circuit.theme))throw new Error('Invalid circuit theme.');
+  const roadWidth=Math.round(Number(circuit.roadWidth));
+  if(!Number.isFinite(roadWidth)||roadWidth<70||roadWidth>140)throw new Error('Road width must be 70–140.');
+  const points=circuit.points.map(point=>{
+    if(!Array.isArray(point)||point.length<2)throw new Error('Invalid circuit point.');
+    const x=Math.round(Number(point[0])),y=Math.round(Number(point[1]));
+    if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||x>1000||y<0||y>600)throw new Error('Circuit point is outside the arena.');
+    return {x,y};
+  });
+  const checkpoints=(circuit.checkpoints||[]).map(Number);
+  if(checkpoints.length<3||checkpoints.length>8||checkpoints.some(v=>!Number.isFinite(v)||v<=0||v>=1))throw new Error('Invalid checkpoints.');
+  return {name,roadWidth,theme:circuit.theme,points,checkpoints};
+}
+
+async function uploadCircuit(circuit){
+  const user=await requireRegisteredUser();
+  const clean=validateCircuitPayload(circuit);
+  const ref=await addDoc(collection(db,'circuits'),{
+    ...clean,
+    seed:Math.floor(Math.random()*1000000000),
+    creatorId:user.uid,
+    creatorUsername:usernameFromUser(user),
+    published:true,
+    schemaVersion:2,
+    createdAt:serverTimestamp(),
+    updatedAt:serverTimestamp()
+  });
+  return ref.id;
+}
+
+async function updateCircuit(circuitId,circuit){
+  const user=await requireRegisteredUser();
+  const ref=doc(db,'circuits',String(circuitId));
+  const existing=await getDoc(ref);
+  if(!existing.exists())throw new Error('Circuit no longer exists.');
+  const data=existing.data();
+  const editor=await isSelectedEditor(user);
+  if(data.creatorId!==user.uid && !editor)throw new Error('Only a selected editor can edit this circuit.');
+  const clean=validateCircuitPayload(circuit);
+  await updateDoc(ref,{...clean,updatedAt:serverTimestamp()});
+  return circuitId;
+}
+
+async function loadCommunityCircuits(){
+  await requireUser();
+  const snapshot=await getDocs(query(collection(db,'circuits'),limit(100)));
+  const circuits=[];
+  snapshot.forEach(snap=>{const circuit=normalizeCircuit(snap);if(circuit)circuits.push(circuit);});
+  return circuits;
+}
+
+async function refreshCommunityCircuits(){
+  const circuits=await loadCommunityCircuits();
+  if(typeof window.installCommunityCircuits==='function')window.installCommunityCircuits(circuits);
+  return circuits;
+}
+
+async function submitScore({finishTime,trackKey,trackName}){
+  const user=await requireUser();
+  if(user.isAnonymous)return {submitted:false,reason:'guest'};
+  const time=Number(finishTime);
+  if(!Number.isFinite(time)||time<=0)return {submitted:false,reason:'invalid'};
+  const score=Math.max(1,Math.min(1000000,Math.round(100000/time)));
+  const ref=doc(db,'leaderboard',user.uid);
+  const current=await getDoc(ref);
+  if(current.exists() && Number(current.data().score)>=score)return {submitted:false,reason:'not-best',score};
+  await setDoc(ref,{
+    ownerUid:user.uid,
+    loginId:user.email,
+    score,
+    finishTime:Math.round(time*1000)/1000,
+    trackKey:String(trackKey||''),
+    trackName:String(trackName||'Unknown track').slice(0,60),
+    updatedAt:serverTimestamp()
+  },{merge:true});
+  return {submitted:true,score};
+}
+
+async function getLeaderboard(){
+  await requireUser();
+  const snapshot=await getDocs(query(collection(db,'leaderboard'),orderBy('score','desc'),limit(20)));
+  return snapshot.docs.map(snap=>{
+    const data=snap.data();
+    const loginId=String(data.loginId||'');
+    const username=loginId.toLowerCase().endsWith('@'+INTERNAL_DOMAIN)?loginId.slice(0,loginId.indexOf('@')):'player';
+    return {uid:snap.id,username,score:Number(data.score)||0,finishTime:Number(data.finishTime)||0,trackName:String(data.trackName||'')};
+  });
+}
+
+window.firebaseGame={
+  auth,db,ready:firebaseReady,
+  registerUsernamePassword,loginUsernamePassword,logoutToGuest,
+  saveToCloud,loadFromCloud,
+  uploadCircuit,updateCircuit,loadCommunityCircuits,refreshCommunityCircuits,
+  submitScore,getLeaderboard,isSelectedEditor
 };
 
-// When Firebase is ready, load the player's cloud save. If this anonymous
-// player has no Firestore document yet, seed Firestore with the current local save.
 firebaseReady
-  .then(async (user) => {
-    window.dispatchEvent(new CustomEvent('fvr-firebase-ready', {
-      detail: { uid: user.uid }
-    }));
-
-    const cloudSave = await loadFromCloud();
-
-    if (cloudSave) {
-      window.dispatchEvent(new CustomEvent('fvr-cloud-loaded', {
-        detail: cloudSave
-      }));
-      console.log('Formula Vector Racer cloud save loaded.');
-    } else if (typeof window.getFvrSaveData === 'function') {
-      await saveToCloud(window.getFvrSaveData());
-      console.log('First Firebase cloud save created.');
-    }
+  .then(async user=>{
+    await emitAuthChanged(user);
+    const [cloudSave]=await Promise.all([loadFromCloud(),refreshCommunityCircuits()]);
+    if(cloudSave){window.dispatchEvent(new CustomEvent('fvr-cloud-loaded',{detail:cloudSave}));}
+    else if(typeof window.getFvrSaveData==='function')await saveToCloud(window.getFvrSaveData());
   })
-  .catch((error) => {
-    console.error('Firebase startup failed:', error);
-  });
+  .catch(error=>console.error('Firebase startup failed:',error));
 </script>
 </body>
 </html>
