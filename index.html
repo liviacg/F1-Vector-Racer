@@ -1924,14 +1924,13 @@ async function isSelectedEditor(user=currentUser()){
 
 async function isSelectedPublisher(user=currentUser()){
   if(!user || user.isAnonymous)return false;
-  const usernameKey = (()=>{
-    try { return normalizeUsername(usernameFromUser(user)); }
-    catch { return ''; }
-  })();
-  const refs=[doc(db,'publishers',user.uid)];
-  if(usernameKey) refs.push(doc(db,'publishers',usernameKey));
-  const snaps=await Promise.all(refs.map(r=>getDoc(r)));
-  return snaps.some(snap=>snap.exists() && snap.data()?.enabled===true);
+  try {
+    const snap=await getDoc(doc(db,'publishers',user.uid));
+    return snap.exists() && snap.data()?.enabled===true;
+  } catch (error) {
+    console.warn('Publisher permission check failed:', error);
+    return false;
+  }
 }
 
 async function emitAuthChanged(user=currentUser()){
