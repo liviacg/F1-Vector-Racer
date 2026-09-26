@@ -794,12 +794,10 @@ button { cursor: pointer; }
       const key = 'community:' + circuit.id;
 
       if (circuit.trackMode === 'bitmap') {
-        if (!circuit.imageUrl || !circuit.roadMask || !Number.isFinite(Number(circuit.startX)) || !Number.isFinite(Number(circuit.startY))) continue;
+        if (!circuit.roadMask || !Number.isFinite(Number(circuit.startX)) || !Number.isFinite(Number(circuit.startY))) continue;
         TRACKS[key] = {
           name:circuit.name,
           trackMode:'bitmap',
-          imageUrl:circuit.imageUrl,
-          imagePath:circuit.imagePath || '',
           roadMask:circuit.roadMask,
           maskWidth:Number(circuit.maskWidth)||1000,
           maskHeight:Number(circuit.maskHeight)||600,
@@ -1020,14 +1018,45 @@ button { cursor: pointer; }
     }catch{return new Uint8Array(0);}
   }
 
+  function buildBitmapVisualCanvas(spec){
+    const w=Number(spec.maskWidth)||1000,h=Number(spec.maskHeight)||600;
+    const mask=decodeBitmapMask(spec.roadMask);
+    if(mask.length < Math.ceil(w*h/8)) throw new Error('Community circuit mask is incomplete.');
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const ctx=c.getContext('2d');
+    const img=ctx.createImageData(w,h),d=img.data;
+    const road=[37,41,47], grass=[49,91,52], edge=[226,226,222];
+    const roadAt=(x,y)=>{
+      if(x<0||y<0||x>=w||y>=h)return false;
+      const i=y*w+x;return !!(mask[i>>3]&(1<<(i&7)));
+    };
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const i=y*w+x,j=i*4,on=roadAt(x,y);
+        let col=on?road:grass;
+        if(on){
+          const boundary=!roadAt(x-2,y)||!roadAt(x+2,y)||!roadAt(x,y-2)||!roadAt(x,y+2);
+          if(boundary) col=edge;
+        }
+        d[j]=col[0];d[j+1]=col[1];d[j+2]=col[2];d[j+3]=255;
+      }
+    }
+    ctx.putImageData(img,0,0);
+    // Add a subtle grid/texture so server-generated tracks do not look empty.
+    ctx.save();ctx.globalAlpha=.10;ctx.strokeStyle='#0f2b18';ctx.lineWidth=1;
+    for(let x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+    for(let y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+    ctx.restore();
+    return c;
+  }
+
   function ensureBitmapImage(spec){
-    if(spec.bitmapImage && spec.bitmapImage.complete && spec.bitmapImage.naturalWidth>0)return Promise.resolve(spec.bitmapImage);
+    if(spec.bitmapImage && (spec.bitmapImage.width||spec.bitmapImage.naturalWidth))return Promise.resolve(spec.bitmapImage);
     if(spec.bitmapImagePromise)return spec.bitmapImagePromise;
-    spec.bitmapImagePromise=new Promise((resolve,reject)=>{
-      const img=new Image();
-      img.onload=()=>{spec.bitmapImage=img;resolve(img);};
-      img.onerror=()=>reject(new Error('Could not load the community circuit image.'));
-      img.src=spec.imageUrl;
+    spec.bitmapImagePromise=Promise.resolve().then(()=>{
+      const canvas=buildBitmapVisualCanvas(spec);
+      spec.bitmapImage=canvas;
+      return canvas;
     });
     return spec.bitmapImagePromise;
   }
@@ -1052,7 +1081,7 @@ button { cursor: pointer; }
     if(spec.trackMode==='bitmap'){
       const bg=document.createElement('canvas'); bg.width=ARENA_W; bg.height=ARENA_H;
       const bctx=bg.getContext('2d'); bctx.fillStyle='#05070a'; bctx.fillRect(0,0,ARENA_W,ARENA_H);
-      if(spec.bitmapImage && spec.bitmapImage.complete)bctx.drawImage(spec.bitmapImage,0,0,ARENA_W,ARENA_H);
+      if(spec.bitmapImage)bctx.drawImage(spec.bitmapImage,0,0,ARENA_W,ARENA_H);
       const start=[spec.startX,ARENA_H-spec.startY];
       const startHeading=((Number(spec.startHeading)||0)%360+360)%360;
       const h=startHeading*Math.PI/180,px=-Math.sin(h),py=Math.cos(h),half=Number(spec.finishHalfWidth)||55;
@@ -1229,8 +1258,8 @@ button { cursor: pointer; }
         const sx=(spec.startX/1000)*canvas.width,sy=(spec.startY/600)*canvas.height;
         ctx.fillStyle='#72f1a5';ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);ctx.fill();
       };
-      if(spec.bitmapImage && spec.bitmapImage.complete)paint();
-      else ensureBitmapImage(spec).then(paint).catch(()=>{ctx.fillStyle='#9ea8bb';ctx.font='bold 11px Courier New';ctx.fillText('IMAGE TRACK',12,22);});
+      if(spec.bitmapImage)paint();
+      else ensureBitmapImage(spec).then(paint).catch(()=>{ctx.fillStyle='#9ea8bb';ctx.font='bold 11px Courier New';ctx.fillText('COMMUNITY TRACK',12,22);});
       return;
     }
     const line=catmullRomClosed(spec.points,16),xs=line.map(p=>p[0]),ys=line.map(p=>p[1]);
@@ -1370,14 +1399,14 @@ button { cursor: pointer; }
     APP.innerHTML=`<section class="screen">
       <div class="topbar"><button id="builderBack" class="btn">← TRACKS</button><div class="title pixel">${editing?'EDIT IMAGE CIRCUIT':'IMAGE CIRCUIT BUILDER'}</div><div class="subtle">Upload a top-down track image. The color at START becomes the drivable road color.</div></div>
       <div class="bitmap-builder-wrap"><div class="bitmap-builder-grid">
-        <div class="bitmap-builder-canvas-card"><canvas id="bitmapBuilderCanvas" width="1000" height="600"></canvas><div class="bitmap-builder-help" style="margin-top:9px">Best result: a 5:3 PNG with one solid road color. Every pixel outside that sampled road color is treated as a wall.</div></div>
+        <div class="bitmap-builder-canvas-card"><canvas id="bitmapBuilderCanvas" width="1000" height="600"></canvas><div class="bitmap-builder-help" style="margin-top:9px">Best result: a 5:3 PNG with one solid road color. Every pixel outside that sampled road color is treated as a wall. Publishing stores only a compact road mask in Firestore; the original image is not uploaded.</div></div>
         <aside class="bitmap-builder-panel">
           <label>CIRCUIT NAME<input id="bitmapName" type="text" maxlength="40" value="${editing?escapeHtml(trackDisplayName(editKey)):''}" placeholder="My Circuit"></label>
           <label>TRACK IMAGE (PNG/JPG)<input id="bitmapFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
           <label>ROAD COLOR TOLERANCE: <span id="toleranceCopy">${editing?existing.roadTolerance||18:18}</span><input id="roadTolerance" type="range" min="0" max="50" value="${editing?existing.roadTolerance||18:18}" style="width:100%;margin-top:8px"></label>
           <div class="road-chip">ROAD COLOR <i id="roadChip"></i><span id="roadRgb" class="subtle pixel">not sampled</span></div>
           <div class="bitmap-builder-actions"><button id="pickStart" class="btn cyan">SET START + DIRECTION</button><button id="publishBitmap" class="btn primary">${editing?'SAVE CHANGES':'PUBLISH CIRCUIT'}</button></div>
-          <div id="bitmapStatus" class="bitmap-builder-status">${editing?'Existing image loaded. You may keep it or upload a replacement.':'1) Upload image. 2) Click SET START + DIRECTION. 3) Click the start point, then a point in the forward direction.'}</div>
+          <div id="bitmapStatus" class="bitmap-builder-status">${editing?'Saved road mask loaded. Upload a replacement image only if you want to rebuild the circuit shape.':'1) Upload image. 2) Click SET START + DIRECTION. 3) Click the start point, then a point in the forward direction. The source image is analyzed locally; only the road mask is published.'}</div>
         </aside>
       </div></div>
     </section>`;
@@ -1386,7 +1415,7 @@ button { cursor: pointer; }
     const source=document.createElement('canvas');source.width=1000;source.height=600;const sctx=source.getContext('2d',{willReadFrequently:true});
     const fileInput=document.getElementById('bitmapFile'),tol=document.getElementById('roadTolerance'),tolCopy=document.getElementById('toleranceCopy');
     const status=document.getElementById('bitmapStatus'),roadChip=document.getElementById('roadChip'),roadRgb=document.getElementById('roadRgb');
-    let sourceData=null,normalizedBlob=null,previewImage=null,pickStage=0;
+    let sourceData=null,previewImage=null,pickStage=0;
     let startX=editing?Number(existing.startX):null,startY=editing?Number(existing.startY):null,startHeading=editing?Number(existing.startHeading)||0:0;
     let roadColor=editing?{...existing.roadColor}:null;
 
@@ -1420,7 +1449,6 @@ button { cursor: pointer; }
       if(coverage>.82)throw new Error('The sampled road color covers almost the whole image. Choose a distinct road color.');
       return {mask:bytesToBase64(bytes),coverage};
     }
-    async function canvasToPngBlob(){return await new Promise((resolve,reject)=>source.toBlob(b=>b?resolve(b):reject(new Error('Could not prepare the PNG.')),'image/png'));}
 
     tol.oninput=()=>{tolCopy.textContent=tol.value;};
     fileInput.onchange=async()=>{
@@ -1431,7 +1459,7 @@ button { cursor: pointer; }
         try{
           sctx.clearRect(0,0,1000,600);sctx.fillStyle='#05070a';sctx.fillRect(0,0,1000,600);sctx.imageSmoothingEnabled=false;
           const scale=Math.min(1000/img.naturalWidth,600/img.naturalHeight),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale)),x=Math.round((1000-w)/2),y=Math.round((600-h)/2);
-          sctx.drawImage(img,x,y,w,h);sourceData=sctx.getImageData(0,0,1000,600);normalizedBlob=await canvasToPngBlob();previewImage=null;startX=startY=null;roadColor=null;pickStage=0;updateChip();drawPreview();
+          sctx.drawImage(img,x,y,w,h);sourceData=sctx.getImageData(0,0,1000,600);previewImage=null;startX=startY=null;roadColor=null;pickStage=0;updateChip();drawPreview();
           setStatus('Image ready. Click SET START + DIRECTION, then click the road at the start/finish point and click again in the forward driving direction.');
         }finally{URL.revokeObjectURL(url);}
       };
@@ -1454,18 +1482,18 @@ button { cursor: pointer; }
       try{
         if(name.length<3||name.length>40)throw new Error('Circuit name must be 3–40 characters.');
         if(!Number.isFinite(startX)||!Number.isFinite(startY)||!roadColor)throw new Error('Set the start position and direction first.');
-        if(!editing && !normalizedBlob)throw new Error('Upload a track image first.');
+        if(!editing && !sourceData)throw new Error('Upload a track image first.');
         const {mask,coverage}=buildRoadMask();
         if(!mask)throw new Error('Road mask is missing. Upload a replacement image.');
         button.disabled=true;button.textContent=editing?'SAVING...':'PUBLISHING...';
-        const payload={name,startX,startY,startHeading,roadColor,roadTolerance:Number(tol.value),roadMask:mask,maskWidth:1000,maskHeight:600,finishHalfWidth:55,imageBlob:normalizedBlob};
+        const payload={name,startX,startY,startHeading,roadColor,roadTolerance:Number(tol.value),roadMask:mask,maskWidth:1000,maskHeight:600,finishHalfWidth:55};
         if(editing)await window.firebaseGame.updateBitmapCircuit(existing.firebaseId,payload);else await window.firebaseGame.uploadBitmapCircuit(payload);
         await window.firebaseGame.refreshCommunityCircuits();toast(editing?'Circuit updated!':'Circuit published!');showTrackSelector();
       }catch(error){console.error(error);setStatus('Publish failed: '+(error.message||error));button.disabled=false;button.textContent=editing?'SAVE CHANGES':'PUBLISH CIRCUIT';}
     };
     document.getElementById('builderBack').onclick=showTrackSelector;
     updateChip();
-    if(editing && existing.imageUrl){previewImage=new Image();previewImage.onload=drawPreview;previewImage.src=existing.imageUrl;}
+    if(editing){ensureBitmapImage(existing).then(img=>{previewImage=img;drawPreview();}).catch(error=>setStatus('Could not reconstruct the saved circuit preview: '+(error.message||error)));}
     drawPreview();
   }
 
@@ -1827,8 +1855,8 @@ button { cursor: pointer; }
 </script>
 <script type="module">
 // ============================================================
-// FIREBASE: guest auth + username/password accounts + saves
-//           + selected circuit editors + global leaderboard
+// FIREBASE: Auth + Firestore only (no Firebase Storage)
+//           saves + publishers/editors + community circuits + leaderboard
 // ============================================================
 
 import { initializeApp }
@@ -1862,20 +1890,11 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-}
-from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD0CNcgAgbAX9YdTaUXR9i5UpxQf4eCjeA",
   authDomain: "f1vectorracer.firebaseapp.com",
   projectId: "f1vectorracer",
-  storageBucket: "f1vectorracer.firebasestorage.app",
   messagingSenderId: "862668348537",
   appId: "1:862668348537:web:fb860f6028ad6c768a08a8"
 };
@@ -1883,7 +1902,6 @@ const firebaseConfig = {
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
-const storageService=getStorage(firebaseApp);
 
 const USERNAME_RE=/^[A-Za-z0-9_]{3,20}$/;
 const INTERNAL_DOMAIN='players.fvr.invalid';
@@ -2026,10 +2044,8 @@ async function normalizeCircuit(snapshot){
     const w=Number(data.maskWidth),h=Number(data.maskHeight),sx=Number(data.startX),sy=Number(data.startY),heading=Number(data.startHeading),tol=Number(data.roadTolerance);
     if(w!==1000||h!==600||!Number.isFinite(sx)||!Number.isFinite(sy)||sx<0||sx>=1000||sy<0||sy>=600)return null;
     if(typeof data.roadMask!=='string'||data.roadMask.length<1000||data.roadMask.length>180000)return null;
-    if(typeof data.imagePath!=='string'||!data.imagePath.startsWith('circuit-images/'))return null;
     if(!data.roadColor||!Number.isFinite(Number(data.roadColor.r))||!Number.isFinite(Number(data.roadColor.g))||!Number.isFinite(Number(data.roadColor.b)))return null;
-    let imageUrl='';try{imageUrl=await getDownloadURL(storageRef(storageService,data.imagePath));}catch(error){console.warn('Circuit image unavailable:',snapshot.id,error);return null;}
-    return {id:snapshot.id,name:data.name.trim(),trackMode:'bitmap',imageUrl,imagePath:data.imagePath,roadMask:data.roadMask,maskWidth:w,maskHeight:h,startX:sx,startY:sy,startHeading:Number.isFinite(heading)?heading:0,roadColor:{r:Number(data.roadColor.r),g:Number(data.roadColor.g),b:Number(data.roadColor.b)},roadTolerance:Number.isFinite(tol)?tol:18,finishHalfWidth:Number(data.finishHalfWidth)||55,creatorId:typeof data.creatorId==='string'?data.creatorId:'',creatorUsername:typeof data.creatorUsername==='string'?data.creatorUsername:'',published:true,schemaVersion:3};
+    return {id:snapshot.id,name:data.name.trim(),trackMode:'bitmap',roadMask:data.roadMask,maskWidth:w,maskHeight:h,startX:sx,startY:sy,startHeading:Number.isFinite(heading)?heading:0,roadColor:{r:Number(data.roadColor.r),g:Number(data.roadColor.g),b:Number(data.roadColor.b)},roadTolerance:Number.isFinite(tol)?tol:18,finishHalfWidth:Number(data.finishHalfWidth)||55,creatorId:typeof data.creatorId==='string'?data.creatorId:'',creatorUsername:typeof data.creatorUsername==='string'?data.creatorUsername:'',published:true,schemaVersion:Number(data.schemaVersion)||3};
   }
 
   if(!ALLOWED_THEMES.has(data.theme))return null;
@@ -2074,25 +2090,42 @@ function validateBitmapCircuitPayload(circuit){
 }
 
 async function uploadBitmapCircuit(circuit){
-  const user=await requireRegisteredUser();if(!await isSelectedPublisher(user))throw new Error('Publisher permission is required.');
-  if(!(circuit.imageBlob instanceof Blob))throw new Error('Track image is missing.');
-  const clean=validateBitmapCircuitPayload(circuit),docRef=doc(collection(db,'circuits')),imagePath=`circuit-images/${user.uid}/${docRef.id}.png`,fileRef=storageRef(storageService,imagePath);
-  try{
-    await uploadBytes(fileRef,circuit.imageBlob,{contentType:'image/png',customMetadata:{ownerUid:user.uid,circuitId:docRef.id}});
-    await setDoc(docRef,{...clean,imagePath,creatorId:user.uid,creatorUsername:usernameFromUser(user),published:true,schemaVersion:3,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
-    return docRef.id;
-  }catch(error){try{await deleteObject(fileRef);}catch{}throw error;}
+  const user=await requireRegisteredUser();
+  if(!await isSelectedPublisher(user))throw new Error('Publisher permission is required.');
+  const clean=validateBitmapCircuitPayload(circuit);
+  const docRef=doc(collection(db,'circuits'));
+  await setDoc(docRef,{
+    ...clean,
+    creatorId:user.uid,
+    creatorUsername:usernameFromUser(user),
+    published:true,
+    schemaVersion:4,
+    createdAt:serverTimestamp(),
+    updatedAt:serverTimestamp()
+  });
+  return docRef.id;
 }
 
 async function updateBitmapCircuit(circuitId,circuit){
-  const user=await requireRegisteredUser();if(!await isSelectedEditor(user))throw new Error('Only a selected editor can edit circuits.');
-  const ref=doc(db,'circuits',String(circuitId)),existing=await getDoc(ref);if(!existing.exists())throw new Error('Circuit no longer exists.');
-  const old=existing.data();if(Number(old.schemaVersion)<3||old.trackMode!=='bitmap')throw new Error('This is a legacy vector circuit.');
-  const clean=validateBitmapCircuitPayload(circuit);let imagePath=String(old.imagePath||'');
-  if(circuit.imageBlob instanceof Blob){if(!imagePath)imagePath=`circuit-images/${old.creatorId||user.uid}/${circuitId}.png`;await uploadBytes(storageRef(storageService,imagePath),circuit.imageBlob,{contentType:'image/png',customMetadata:{ownerUid:String(old.creatorId||user.uid),circuitId:String(circuitId)}});}
-  await updateDoc(ref,{...clean,imagePath,updatedAt:serverTimestamp()});return circuitId;
+  const user=await requireRegisteredUser();
+  if(!await isSelectedEditor(user))throw new Error('Only a selected editor can edit circuits.');
+  const ref=doc(db,'circuits',String(circuitId));
+  const existing=await getDoc(ref);
+  if(!existing.exists())throw new Error('Circuit no longer exists.');
+  const old=existing.data();
+  if(old.trackMode!=='bitmap')throw new Error('This is a legacy vector circuit.');
+  const clean=validateBitmapCircuitPayload(circuit);
+  await setDoc(ref,{
+    ...clean,
+    creatorId:String(old.creatorId||user.uid),
+    creatorUsername:String(old.creatorUsername||usernameFromUser(user)),
+    published:true,
+    schemaVersion:4,
+    createdAt:old.createdAt || serverTimestamp(),
+    updatedAt:serverTimestamp()
+  });
+  return circuitId;
 }
-
 
 async function uploadCircuit(circuit){
   const user=await requireRegisteredUser();
@@ -2170,7 +2203,7 @@ async function getLeaderboard(){
 }
 
 window.firebaseGame={
-  auth,db,storage:storageService,ready:firebaseReady,
+  auth,db,ready:firebaseReady,
   registerUsernamePassword,loginUsernamePassword,logoutToGuest,
   saveToCloud,loadFromCloud,
   uploadCircuit,updateCircuit,uploadBitmapCircuit,updateBitmapCircuit,loadCommunityCircuits,refreshCommunityCircuits,
